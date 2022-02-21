@@ -3,14 +3,16 @@
   <PropertyGroup>
     <TargetFramework>netcoreapp3.1</TargetFramework>
     <Authors>Emiel Nijhuis</Authors>
-    <Description>Utility library that contains services regarding Wikimedia projects and initiatives such as Wikipedia, Wikidata and Toolforge.</Description>
+    <Description>Utility library that contains services regarding Wikimedia projects and initiatives such as Wikipedia, Wikidata and Toolforge tools.</Description>
     <PackageIcon>res\900px-Wikimedia-logo.png</PackageIcon>
     <PackageReadmeFile>README.md</PackageReadmeFile>
     <PackageTags>Wikimedia;Wikipedia;Wikidata;Toolforge</PackageTags>
-    <PackageReleaseNotes>Added MIT license</PackageReleaseNotes>
+    <PackageReleaseNotes>Added initial Wikidata services</PackageReleaseNotes>
     <RepositoryType>git</RepositoryType>
     <PackageLicenseFile>licenses\license.txt</PackageLicenseFile>
-    <Version>1.0.1.0</Version>
+    <Version>1.0.2.0</Version>
+    <RepositoryUrl>https://github.com/mill1/Wikimedia.Utilities</RepositoryUrl>
+    <AssemblyVersion></AssemblyVersion>
   </PropertyGroup>
 
   <ItemGroup>
