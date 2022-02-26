@@ -31,16 +31,15 @@ namespace Wikimedia.Utilities.Services
 
             text = TrimWikiText(text, month, deathDate.Year);
 
-            if (text.Contains("* "))
-                // Let's see how this goes.. Voordeel: ook evt. ** [[. Nadeel: mogelijk in referenties
-                throw new InvalidWikipediaPageException($"Invalid markup style found: '* '. Fix the article");
-
             if (removeSublists)
                 text = RemoveSubLists(text);
-            
-            // Flatten the sublists
+
+            // Correct markup temporarily
+            text = text.Replace("* [[", "*[[");
+            // Flatten the sublists (if any)
             text = text.Replace("**[[", "*[[");
-            text = text.Replace("*[[", EntryDelimiter); // See GetDeceasedTextAsList(); solves hassle with "M*A*S*H, "NOC*NSF, * in references etc.
+            // See GetDeceasedTextAsList(); solves hassle with "M*A*S*H, "NOC*NSF, * in references etc.
+            text = text.Replace("*[[", EntryDelimiter); 
 
             if (text.Contains("* "))
                 throw new InvalidWikipediaPageException($"Invalid markup style found: '* '. Fix the article");
@@ -86,6 +85,9 @@ namespace Wikimedia.Utilities.Services
 
         private string RemoveSubLists(string text)
         {
+            if (text.Contains("** [["))
+                throw new InvalidWikipediaPageException($"Invalid markup style found: '** [['. Fix the article");
+
             if (!text.Contains("**[["))
                 return text;
 
