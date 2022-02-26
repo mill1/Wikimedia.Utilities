@@ -41,9 +41,6 @@ namespace Wikimedia.Utilities.Services
             // See GetDeceasedTextAsList(); solves hassle with "M*A*S*H, "NOC*NSF, * in references etc.
             text = text.Replace("*[[", EntryDelimiter); 
 
-            if (text.Contains("* "))
-                throw new InvalidWikipediaPageException($"Invalid markup style found: '* '. Fix the article");
-
             //  'alphabetisation' tags: aanpassen in wiki:
             // FOUT: *<!-- M -->[[Mei Baojiu]], 82
             // GOED: <!-- M -->*[[Mei Baojiu]], 82
