@@ -1,6 +1,4 @@
-﻿using Wikimedia.Utilities.Dtos;
-
-namespace Wikimedia.Utilities.Dtos
+﻿namespace Wikimedia.Utilities.Dtos
 {
     public class EntryDto
     {

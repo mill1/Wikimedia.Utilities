@@ -3,10 +3,10 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Text.RegularExpressions;
-using Wikimedia.Utilities.Interfaces;
 using Wikimedia.Utilities.Dtos;
 using Wikimedia.Utilities.Exceptions;
 using Wikimedia.Utilities.ExtensionMethods;
+using Wikimedia.Utilities.Interfaces;
 
 namespace Wikimedia.Utilities.Services
 {
@@ -394,15 +394,41 @@ namespace Wikimedia.Utilities.Services
                 return daySection.Substring(0, pos);
         }
 
-        public string GetNameFromEntryText(string entryText)
+
+        public string GetNameFromEntryText(string entryText, bool linkedName)
         {
             string namePart = entryText.Substring("[[".Length, entryText.IndexOf("]]") - "]]".Length);
             int pos = namePart.IndexOf('|');
+            string name;
 
             if (pos < 0)
-                return namePart;
+                name = namePart;
             else
-                return namePart.Substring(0, pos);
+            {
+                if (linkedName)
+                    name = namePart.Substring(0, pos);
+                else
+                    name = namePart.Substring(pos + "|".Length);
+            }
+
+            name = CheckRedirection(linkedName, name);
+
+            return name;
+        }
+
+        private string CheckRedirection(bool linkedName, string name)
+        {
+            string redirectedArticleName;
+
+            //if linked name make sure it is not a redirect.
+            if (linkedName)
+            {
+                new WikipediaWebClient().GetWikiTextArticle(name, out redirectedArticleName);
+
+                if (redirectedArticleName != null)
+                    return redirectedArticleName;
+            }
+            return name;
         }
 
         public string GetInformationFromEntryText(string entryText)

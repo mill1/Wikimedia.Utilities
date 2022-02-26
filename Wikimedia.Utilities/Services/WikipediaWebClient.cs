@@ -1,26 +1,17 @@
-﻿using Microsoft.Extensions.Logging;
-using System;
-using Wikimedia.Utilities.Exceptions;
+﻿using Wikimedia.Utilities.Exceptions;
 using Wikimedia.Utilities.Interfaces;
 
 namespace Wikimedia.Utilities.Services
 {
     public class WikipediaWebClient : IWikipediaWebClient
     {
-        private readonly ILogger<WikipediaWebClient> logger;        
-
-        public WikipediaWebClient(ILogger<WikipediaWebClient> logger)
-        {
-            this.logger = logger;            
-        }
-
         public string GetWikiTextArticle(string article, out string redirectedArticleName)
         {
             string wikiText = FetchWikiTextArticle(article);
 
             if (wikiText.Contains("#REDIRECT"))
             {
-                redirectedArticleName = GetRedirectArticleName(wikiText);
+                redirectedArticleName = GetRedirectArticleName(article, wikiText);
                 wikiText = FetchWikiTextArticle(redirectedArticleName);
             }
             else
@@ -41,22 +32,20 @@ namespace Wikimedia.Utilities.Services
             {
                 return new System.Net.WebClient().DownloadString(uri);
             }
-            catch (System.Net.WebException e) // article does not exist (anymore) in Wikipedia
+            catch (System.Net.WebException) // article does not exist (anymore) in Wikipedia
             {
                 var message = $"{article}: FAIL: no such wikipedia article";
-                logger.LogError(message, e);
                 throw new WikipediaPageNotFoundException(message);
-            }
-            catch (Exception e)
-            {
-                logger.LogError(e.Message, e);
-                throw;
             }
         }
 
-        private string GetRedirectArticleName(string wikiText)
-        {            
+        private string GetRedirectArticleName(string article, string wikiText)
+        {
             int pos = wikiText.IndexOf("[[");
+
+            if (pos == -1)
+                throw new InvalidWikipediaPageException($"{article}: #REDIRECT without '[['!");
+
             string redirectPage = wikiText.Substring(pos + 2);
             pos = redirectPage.IndexOf("]]");
 
