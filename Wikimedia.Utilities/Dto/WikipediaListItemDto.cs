@@ -1,10 +1,9 @@
-﻿using Wikimedia.Utilities.Dtos;
-
-namespace Wikimedia.Utilities.Dtos
+﻿namespace Wikimedia.Utilities.Dtos
 {
-    public class EntryDto
+    // TODO Wellicht terugplaatsen naar WDP?
+    public class WikipediaListItemDto
     {
-        public string Id { get; set; } // ID is gelijk voor WP- en Wikidata items
+        public string Id { get; set; } // ID is gelijk voor WP- en Wikidata articles
         public string WikiText { get; set; }
         public int NotabilityScore { get; set; }
         public string ReferenceUrl { get; set; }

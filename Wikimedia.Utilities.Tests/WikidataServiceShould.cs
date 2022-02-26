@@ -1,7 +1,5 @@
-using Microsoft.Extensions.Logging.Abstractions;
 using System;
 using System.Linq;
-using System.Net.Http;
 using Wikimedia.Utilities.Interfaces;
 using Wikimedia.Utilities.Services;
 using Xunit;
@@ -13,9 +11,7 @@ namespace Wikimedia.Utilities.Tests
         [Fact(DisplayName = "get a list of items per death data")]
         public void GetListOfDeceased()
         {
-            var client = new HttpClient();
-            var logger = new NullLogger<WikidataService>();
-            IWikidataService wikidataService = new WikidataService(client, logger);
+            IWikidataService wikidataService = new WikidataService();
 
             var deathDate = new DateTime(1997, 3, 28);
 
@@ -27,9 +23,7 @@ namespace Wikimedia.Utilities.Tests
         [Fact(DisplayName = "get the number of site links of an article")]
         public void GetNumberOfSiteLinks()
         {
-            var client = new HttpClient();
-            var logger = new NullLogger<WikidataService>();
-            IWikidataService wikidataService = new WikidataService(client, logger);
+            IWikidataService wikidataService = new WikidataService();
 
             var item = wikidataService.GetSitelinksResult("Jan Pelleboer");
 

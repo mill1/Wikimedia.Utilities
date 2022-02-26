@@ -3,10 +3,10 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Text.RegularExpressions;
-using Wikimedia.Utilities.Interfaces;
 using Wikimedia.Utilities.Dtos;
 using Wikimedia.Utilities.Exceptions;
 using Wikimedia.Utilities.ExtensionMethods;
+using Wikimedia.Utilities.Interfaces;
 
 namespace Wikimedia.Utilities.Services
 {
@@ -15,6 +15,104 @@ namespace Wikimedia.Utilities.Services
     {
         private const int InitialMaxLengthDescription = 500;
         private const int InitialPosEnd = 100000;
+        private const string EntryDelimiter = "~!&#~[[";
+
+        public string GetWikiTextDeathsPerMonth(DateTime deathDate, bool removeSublists, string listArticleName = null)
+        {
+            string text;
+            string month = deathDate.ToString("MMMM", new CultureInfo("en-US"));
+            string articleName = listArticleName == null ? $"Deaths in {month} {deathDate.Year}" : listArticleName;
+
+            text = new WikipediaWebClient().GetWikiTextArticle(articleName, out string redirectedArticle);
+
+            if (redirectedArticle != null)
+                // No deaths per month article yet. Redirected to Year page
+                return null;
+
+            text = TrimWikiText(text, month, deathDate.Year);
+
+            if (text.Contains("* "))
+                // Let's see how this goes.. Voordeel: ook evt. ** [[. Nadeel: mogelijk in referenties
+                throw new InvalidWikipediaPageException($"Invalid markup style found: '* '. Fix the article");
+
+            if (removeSublists)
+                text = RemoveSubLists(text);
+            
+            // Flatten the sublists
+            text = text.Replace("**[[", "*[[");
+            text = text.Replace("*[[", EntryDelimiter); // See GetDeceasedTextAsList(); solves hassle with "M*A*S*H, "NOC*NSF, * in references etc.
+
+            if (text.Contains("* "))
+                throw new InvalidWikipediaPageException($"Invalid markup style found: '* '. Fix the article");
+
+            //  'alphabetisation' tags: aanpassen in wiki:
+            // FOUT: *<!-- M -->[[Mei Baojiu]], 82
+            // GOED: <!-- M -->*[[Mei Baojiu]], 82
+            // see https://en.wikipedia.org/w/index.php?title=Deaths_in_April_2016&oldid=prev&diff=1048507267
+
+            return text;
+        }
+
+        public string GetDaySectionOfMonthList(string wikiText, int day)
+        {
+            string daySection = wikiText;
+            int pos;
+
+            //Trim left
+            pos = Math.Max(daySection.IndexOf($"==={day}==="), daySection.IndexOf($"=== {day} ==="));
+
+            if (pos == -1)
+                throw new InvalidWikipediaPageException($"Invalid day section header found. Day: {day}, Text: '{wikiText.Substring(0, 16)}...'");
+
+            daySection = daySection.Substring(pos);
+
+            // Trim right
+            pos = Math.Max(daySection.IndexOf($"==={day + 1}==="), daySection.IndexOf($"=== {day + 1} ==="));
+
+            if (pos == -1) // we reached the end
+                return daySection;
+            else
+                return daySection.Substring(0, pos);
+        }
+
+        public IEnumerable<string> GetDeceasedTextAsList(string daySection)
+        {
+            string[] array = daySection.Split(EntryDelimiter);
+
+            IEnumerable<string> deceasedWikiText = array.Select(e => "[[" + e);
+
+            return deceasedWikiText.Skip(1);
+        }
+
+        private string RemoveSubLists(string text)
+        {
+            if (!text.Contains("**[["))
+                return text;
+
+            text = text.Replace("**[[", "~~[[");
+
+            var entries = text.Split('*').Skip(1).ToList();
+
+            entries.ForEach(entry =>
+            {
+                if (entry.Substring(0, 2) != "[[")
+                    text = RemoveSubList(entry, text);
+            });
+
+            return text;
+        }
+
+        private string RemoveSubList(string subList, string text)
+        {
+            int pos = subList.IndexOf("==");
+
+            if (pos == -1)
+                throw new InvalidWikipediaPageException($"Invalid markup found: no section found after sub list. Fix the article");
+
+            subList = subList.Substring(0, pos);
+
+            return text.Replace($"*{subList}", string.Empty);
+        }
 
         public string GetReferenceUrlFromReferenceText(string reference)
         {
@@ -277,7 +375,7 @@ namespace Wikimedia.Utilities.Services
             return null;
         }
 
-        public DateTime ResolveDateOfBirth(EntryDto entry, string wikiText)
+        public DateTime ResolveDateOfBirth(WikipediaListItemDto entry, string wikiText)
         {
             // Resolving the DoB is only of use when there are multiple entries regarding the same wikidata item otherwise we don't really care. No feature creep.
 
@@ -372,37 +470,40 @@ namespace Wikimedia.Utilities.Services
             return wikiText;
         }
 
-        public string GetDaySectionOfMonthList(string wikiText, int day)
-        {
-            string daySection = wikiText;
-            int pos;
-
-            //Trim left
-            pos = Math.Max(daySection.IndexOf($"==={day}==="), daySection.IndexOf($"=== {day} ==="));
-
-            if (pos == -1)
-                throw new InvalidWikipediaPageException($"Invalid day section header found. Day: {day}, Text: '{wikiText.Substring(0, 16)}...'");
-
-            daySection = daySection.Substring(pos);
-
-            // Trim right
-            pos = Math.Max(daySection.IndexOf($"==={day + 1}==="), daySection.IndexOf($"=== {day + 1} ==="));
-
-            if (pos < 0) // we reached the end
-                return daySection;
-            else
-                return daySection.Substring(0, pos);
-        }
-
-        public string GetNameFromEntryText(string entryText)
+        public string GetNameFromEntryText(string entryText, bool linkedName)
         {
             string namePart = entryText.Substring("[[".Length, entryText.IndexOf("]]") - "]]".Length);
             int pos = namePart.IndexOf('|');
+            string name;
 
             if (pos < 0)
-                return namePart;
+                name = namePart;
             else
-                return namePart.Substring(0, pos);
+            {
+                if (linkedName)
+                    name = namePart.Substring(0, pos);
+                else
+                    name = namePart.Substring(pos + "|".Length);
+            }
+
+            name = CheckRedirection(linkedName, name);
+
+            return name;
+        }
+
+        private string CheckRedirection(bool linkedName, string name)
+        {
+            string redirectedArticleName;
+
+            //if linked name make sure it is not a redirect.
+            if (linkedName)
+            {
+                new WikipediaWebClient().GetWikiTextArticle(name, out redirectedArticleName);
+
+                if (redirectedArticleName != null)
+                    return redirectedArticleName;
+            }
+            return name;
         }
 
         public string GetInformationFromEntryText(string entryText)
@@ -502,7 +603,7 @@ namespace Wikimedia.Utilities.Services
             return causeOfDeath;
         }
 
-        public string ResolveCauseOfDeath(EntryDto entry)
+        public string ResolveCauseOfDeath(WikipediaListItemDto entry)
         {
             string causeOfDeath;
 

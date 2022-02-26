@@ -1,7 +1,4 @@
-﻿using Microsoft.Extensions.Logging.Abstractions;
-using System;
-using System.Net.Http;
-using Wikimedia.Utilities.Interfaces;
+﻿using System;
 using Wikimedia.Utilities.Services;
 
 namespace Wikimedia.Utilities.Console
@@ -26,11 +23,7 @@ namespace Wikimedia.Utilities.Console
                 if (string.IsNullOrEmpty(article))
                     throw new ArgumentNullException(article, "Wikipedia article name cannot be empty");
 
-                var client = new HttpClient();
-                var logger = new NullLogger<ToolforgeService>();
-                IToolforgeService toolforgeService = new ToolforgeService(client, logger);
-
-                var info = toolforgeService.GetWikilinksInfo(article);
+                var info = new ToolforgeService().GetWikilinksInfo(article);
                 System.Console.WriteLine($"Number of links to article {article}: {info.all}");
                 System.Console.WriteLine($"Number of direct links: {info.direct}");
                 System.Console.WriteLine($"Number of indirect links: {info.direct}");
@@ -39,7 +32,7 @@ namespace Wikimedia.Utilities.Console
             {
                 System.Console.ForegroundColor = ConsoleColor.Red;
                 System.Console.WriteLine(e);
-                System.Console.ForegroundColor = ConsoleColor.White;                
+                System.Console.ForegroundColor = ConsoleColor.White;
             }
         }
     }

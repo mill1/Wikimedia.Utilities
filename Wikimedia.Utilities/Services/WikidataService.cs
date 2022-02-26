@@ -1,5 +1,4 @@
-﻿using Microsoft.Extensions.Logging;
-using Newtonsoft.Json;
+﻿using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -15,12 +14,10 @@ namespace Wikimedia.Utilities.Services
     public class WikidataService : IWikidataService
     {
         private readonly HttpClient client;
-        private readonly ILogger logger;
 
-        public WikidataService(HttpClient client, ILogger<WikidataService> logger)
+        public WikidataService()
         {
-            this.logger = logger;
-            this.client = client;
+            this.client = new HttpClient();
             client.DefaultRequestHeaders.Accept.Clear();
             // https://www.mediawiki.org/w/index.php?title=Topic:V1zau9rqd4ritpug&topic_showPostId=wiworqhh4r7p29x2#flow-post-wiworqhh4r7p29x2
             client.DefaultRequestHeaders.Add("User-Agent", "C# Application");
@@ -29,19 +26,11 @@ namespace Wikimedia.Utilities.Services
 
         public WikidataItemDto GetSitelinksResult(string article)
         {
-            try
-            {
-                string uri = GetUrlWikidataQueryNumberOfSitelinks(article);
-                var jsonString = client.GetStringAsync(uri).Result;
-                var result = JsonConvert.DeserializeObject<ResultSitelinksOfArticle>(jsonString);
+            string uri = GetUrlWikidataQueryNumberOfSitelinks(article);
+            var jsonString = client.GetStringAsync(uri).Result;
+            var result = JsonConvert.DeserializeObject<ResultSitelinksOfArticle>(jsonString);
 
-                return MapToItem(article, result.results.bindings);
-            }
-            catch (Exception e)
-            {
-                logger.LogError(e.Message, e);
-                throw;
-            }
+            return MapToItem(article, result.results.bindings);
         }
 
         private string GetUrlWikidataQueryNumberOfSitelinks(string article)
@@ -75,19 +64,11 @@ namespace Wikimedia.Utilities.Services
 
         public IEnumerable<WikidataItemDto> GetItemsPerDeathDate(DateTime deathDate)
         {
-            try
-            {
-                string uri = GetUrlWikidataQueryDeceasedPerDate(deathDate);
-                var jsonString = client.GetStringAsync(uri).Result;
-                var result = JsonConvert.DeserializeObject<ResultDeathsPerDate>(jsonString);
+            string uri = GetUrlWikidataQueryDeceasedPerDate(deathDate);
+            var jsonString = client.GetStringAsync(uri).Result;
+            var result = JsonConvert.DeserializeObject<ResultDeathsPerDate>(jsonString);
 
-                return MapToItem(result.results.bindings);
-            }
-            catch (Exception e)
-            {
-                logger.LogError(e.Message, e);
-                throw;
-            }
+            return MapToItem(result.results.bindings);
         }
 
         public DateTime ResolveDateOfBirth(WikidataItemDto wikiDataItemDto)
