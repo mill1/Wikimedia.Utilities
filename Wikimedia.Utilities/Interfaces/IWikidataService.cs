@@ -7,7 +7,7 @@ namespace Wikimedia.Utilities.Interfaces
     public interface IWikidataService
     {
         WikidataItemDto GetSitelinksResult(string article);
-        IEnumerable<WikidataItemDto> GetItemsPerDeathDate(DateTime deathDate);
+        IEnumerable<WikidataItemDto> GetItemsPerDeathDate(DateTime deathDate, bool coreFieldsOnly);
         DateTime ResolveDateOfBirth(WikidataItemDto wikiDataItemDto);
         string ResolveItemLabel(WikidataItemDto wikiDataItemDto);
         string ResolveItemDescription(WikidataItemDto wikiDataItemDto);

@@ -9,14 +9,27 @@ namespace Wikimedia.Utilities.Tests
     public class WikidataServiceShould
     {
         [Fact(DisplayName = "get a list of items per death data")]
-        public void GetListOfDeceased()
+        public void GetListOfDeceasedAllField()
         {
             IWikidataService wikidataService = new WikidataService();
 
             var deathDate = new DateTime(1997, 3, 28);
 
-            var items = wikidataService.GetItemsPerDeathDate(deathDate);
+            var items = wikidataService.GetItemsPerDeathDate(deathDate, false);
 
+            Assert.Equal(6, items.ToList().Count);
+        }
+
+        [Fact(DisplayName = "get a list of items per death data, core fields only")]
+        public void GetListOfDeceasedCoreFields()
+        {
+            IWikidataService wikidataService = new WikidataService();
+
+            var deathDate = new DateTime(1997, 3, 28);
+
+            var items = wikidataService.GetItemsPerDeathDate(deathDate, true);
+
+            Assert.Null(items.First().DateOfBirth);
             Assert.Equal(6, items.ToList().Count);
         }
 
