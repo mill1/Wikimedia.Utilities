@@ -200,6 +200,35 @@ namespace Wikimedia.Utilities.Services
                    @"%22%5E%5Exsd%3AdateTime%7D%20%3Fdod%20%5Ewdt%3AP570%20%3Fitem%20.%20%3Fitem%20wikibase%3Asitelinks%20%3Fsl%20.%20%3Fitem%20%5Eschema%3Aabout%20%3Farticle%20.%20%3Farticle%20schema%3AisPartOf%20%3Chttps%3A%2F%2Fen.wikipedia.org%2F%3E%3B%20schema%3Aname%20%3Farticlename%20.%20OPTIONAL%20%7B%20%3Fitem%20p%3AP570%20%3Fdod_stm%20.%20%3Fdod_stm%20ps%3AP570%20%3Fdod%20%3B%20psv%3AP570%20%5Bwikibase%3AtimePrecision%20%3Fdod_precision%5D.%20FILTER(%20%3Fdod_precision%20%3E%3D%20%2211%22%5E%5Exsd%3Ainteger%20)%20%7D%20SERVICE%20wikibase%3Alabel%20%7B%20bd%3AserviceParam%20wikibase%3Alanguage%20%22en%22%20.%20%3Fitem%20rdfs%3Alabel%20%3FitemLabel%20.%20%3Fitem%20schema%3Adescription%20%3FitemDescription%20.%20%7D%20BIND(REPLACE(%3FitemLabel%2C%20%22%5E.*(%3F%3C!%20%5BVv%5D%5Bao%5Dn%7C%20%5BDd%5D%5Baeiu%5D%7C%20%5BDd%5D%5Be%5D%5Blns%5D%7C%20%5BLl%5D%5Bae%5D)%20(%3F!(%5BSJ%5Dr%5C%5C.%3F%7C%5BXVI%5D%2B)%24)%22%2C%20%22%22)%20AS%20%3Fsortname)%20%7D%20" +
                    @"ORDER%20BY%20ASC(UCASE(%3Fsortname))%20ASC(UCASE(%3FitemLabel))" +
                    @"&format=json";
+
+
+            /* This  is the actual sparql SQL that is sent:
+
+SELECT ?item ?articlename ?itemLabel ?itemDescription ?sl ?dod
+WHERE {
+    VALUES ?dod {"+2001-08-25"^^xsd:dateTime}
+    ?dod ^wdt:P570 ?item .
+    ?item wikibase:sitelinks ?sl .
+    ?item ^schema:about ?article .
+    ?article schema:isPartOf <https://en.wikipedia.org/>;
+    schema:name ?articlename .
+    OPTIONAL
+    {
+        ?item p:P570 ?dod_stm .
+        ?dod_stm ps:P570 ?dod ;
+                psv:P570 [wikibase:timePrecision ?dod_precision].
+        FILTER( ?dod_precision >= "11"^^xsd:integer )
+        }
+    SERVICE wikibase:label
+    {
+        bd:serviceParam wikibase:language "en" .
+        ?item rdfs:label ?itemLabel .
+        ?item schema:description ?itemDescription .
+    }
+    BIND(REPLACE(?itemLabel, "^.*(?<! [Vv][ao]n| [Dd][aeiu]| [Dd][e][lns]| [Ll][ae]) (?!([SJ]r\\.?|[XVI]+)$)", "") AS ?sortname)  
+} ORDER BY ASC(UCASE(?sortname)) ASC(UCASE(?itemLabel))
+
+*/
         }
 
         private string GetUrlQueryDeceasedPerDateAllFields(DateTime date)
