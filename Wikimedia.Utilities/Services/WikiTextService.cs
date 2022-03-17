@@ -195,6 +195,7 @@ namespace Wikimedia.Utilities.Services
             description = description.Replace("acknowledged ", string.Empty, StringComparison.Ordinal);
             description = description.Replace("influential ", string.Empty, StringComparison.Ordinal);
             description = description.Replace("former ", string.Empty, StringComparison.Ordinal);
+            description = description.Replace("iconic ", string.Empty, StringComparison.Ordinal);
 
             if (description.Contains("football", StringComparison.OrdinalIgnoreCase))
                 description = SanitizeFootballDescription(description);
