@@ -29,7 +29,8 @@ namespace Wikimedia.Utilities.Tests
 
             var items = wikidataService.GetItemsPerDeathDate(deathDate, true);
 
-            Assert.Equal(17, items.ToList().Count);
+            Assert.Null(items.First().DateOfBirth);
+            Assert.Equal(6, items.ToList().Count);
         }
 
         [Fact(DisplayName = "get the number of site links of an article")]
