@@ -12,4 +12,4 @@ The utility offers four types of services:
 * ToolforgeService: service that accesses toolforge.org in order to fetch [information on incoming links](https://linkcount.toolforge.org/?project=en.wikipedia.org&page=Clayton+Townsend) regarding a Wikipedia article.
 
 ### Nuget
-This utility as is available [here](https://www.nuget.org/packages/Wikimedia.Utilities) as a Nuget package.
+This utility as is available [here](https://www.nuget.org/packages/Wikimedia.Utilities) as a NuGet package.
