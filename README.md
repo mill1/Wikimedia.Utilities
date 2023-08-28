@@ -7,7 +7,7 @@ These repo's (web applications and console utilities) make use of this library t
 
 The utility offers four types of services:
 * Wikitext service: functionality directed at text manipulation and resolving data from the wikitext of a Wikipedia page
-* WikipediaWebClient: a Wikipedia WebClient wrapper
+* WikipediaWebClient: a WebClient wrapper for Wikipedia-related requests
 * WikidataService: contains features that fetch data from Wikidata and resolves and manipulates its content
 * ToolforgeService: service that accesses toolforge.org in order to fetch [information on incoming links](https://linkcount.toolforge.org/?project=en.wikipedia.org&page=Clayton+Townsend) regarding a Wikipedia article.
 
