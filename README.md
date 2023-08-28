@@ -11,5 +11,5 @@ The utility offers four types of services:
 * WikidataService: contains features that fetch data from Wikidata and resolves and manipulates its content
 * ToolforgeService: service that accesses toolforge.org in order to fetch [information on incoming links](https://linkcount.toolforge.org/?project=en.wikipedia.org&page=Clayton+Townsend) regarding a Wikipedia article.
 
-### Nuget
+### NuGet
 This utility as is available [here](https://www.nuget.org/packages/Wikimedia.Utilities) as a NuGet package.
