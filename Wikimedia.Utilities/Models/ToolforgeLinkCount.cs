@@ -1,6 +1,6 @@
 ﻿namespace Wikimedia.Utilities.Models
 {
-    public class LinkCount
+    public class ToolforgeLinkCount
     {
         public object filelinks { get; set; }
         public object categorylinks { get; set; }

@@ -23,10 +23,8 @@ namespace Wikimedia.Utilities.Console
                 if (string.IsNullOrEmpty(article))
                     throw new ArgumentNullException(article, "Wikipedia article name cannot be empty");
 
-                var info = new ToolforgeService().GetWikilinksInfo(article);
-                System.Console.WriteLine($"Number of links to article {article}: {info.all}");
-                System.Console.WriteLine($"Number of direct links: {info.direct}");
-                System.Console.WriteLine($"Number of indirect links: {info.direct}");
+                var count = new WikipediaWebClient().GetWikimediaSearchDirectLinkCount(article);
+                System.Console.WriteLine($"Number of links to article {article}: {count}");
             }
             catch (Exception e)
             {

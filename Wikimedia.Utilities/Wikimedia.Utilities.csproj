@@ -3,14 +3,15 @@
   <PropertyGroup>
     <TargetFramework>netcoreapp3.1</TargetFramework>
     <Authors>Emiel Nijhuis</Authors>
-    <Description>Utility library that contains services regarding Wikimedia projects and initiatives such as Wikipedia, Wikidata and Toolforge tools.</Description>
+    <Description>Utility library that contains services regarding Wikimedia projects and initiatives such as Wikipedia and Wikidata.</Description>
     <PackageIcon>res\900px-Wikimedia-logo.png</PackageIcon>
     <PackageReadmeFile>README.md</PackageReadmeFile>
-    <PackageTags>Wikimedia;Wikipedia;Wikidata;Toolforge</PackageTags>
-    <PackageReleaseNotes>Breaking change: WikidataService.GetItemsPerDeathDate; added parameter (bool). </PackageReleaseNotes>
+    <PackageTags>wikimedia;wikipedia;wikidata;netcore31;wikipedia-api;wikipedia-scraper;library;web-scraper</PackageTags>
+    <PackageReleaseNotes>- Added method to WikipediaWebClient service: GetWikimediaSearchDirectLinkCount(string article)
+- Breaking change: ToolforgeService is deprecated. Its methods have been moved to the WikipediaWebClient service</PackageReleaseNotes>
     <RepositoryType>git</RepositoryType>
     <PackageLicenseFile>licenses\license.txt</PackageLicenseFile>
-    <Version>1.0.9.0</Version>
+    <Version>1.0.10.0</Version>
     <RepositoryUrl>https://github.com/mill1/Wikimedia.Utilities</RepositoryUrl>
     <AssemblyVersion></AssemblyVersion>
   </PropertyGroup>
