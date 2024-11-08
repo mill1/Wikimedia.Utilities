@@ -45,5 +45,18 @@ namespace Wikimedia.Utilities.Tests
             Assert.Equal(3, item.SiteLinksCount);
             Assert.Equal("http://www.wikidata.org/entity/Q2170771", item.Uri);
         }
+
+        [Fact(DisplayName = "get the number of site links of an article")]
+        public void GetNumberOfSiteLinks2()
+        {
+            IWikidataService wikidataService = new WikidataService();
+
+            var item = wikidataService.GetSitelinksResult("Orville_Freeman");
+
+            Assert.Equal("Orville Freeman", item.ArticleName);
+            Assert.Equal("Orville Freeman", item.Label);
+            Assert.Equal(13, item.SiteLinksCount);
+            Assert.Equal("http://www.wikidata.org/entity/Q888636", item.Uri);
+        }
     }
 }
