@@ -1,11 +1,12 @@
-﻿using Wikimedia.Utilities.Services;
+﻿using Wikimedia.Utilities.Interfaces;
+using Wikimedia.Utilities.Services;
 using Xunit;
 
 namespace WikipediaDeathsPages.Tests
 {
     public class WikiTextServiceShould
     {
-        private readonly WikiTextService wikiTextService;
+        private readonly IWikiTextService wikiTextService;
 
         public WikiTextServiceShould()
         {
@@ -47,5 +48,22 @@ namespace WikipediaDeathsPages.Tests
             Assert.Equal("American politician", actual);
         }
 
+        [Theory(DisplayName = "Trim Right WikiText")]
+        [InlineData("==References==")]
+        [InlineData("== References ==")]
+        [InlineData("==References ==")]
+        [InlineData("== References==")]
+        public void TrimRightWikiText(string subtext)
+        {
+            var month = "May";
+            var year = 2004;
+            var title = $"=={month} {year}==";
+
+            var text = $"Start\n{title}\nContents\n{subtext}\nEnd";
+
+            var actual = wikiTextService.TrimWikiText(text, month, year);
+
+            Assert.Equal("==May 2004==Contents", actual);
+        }
     }
 }

@@ -551,6 +551,9 @@ namespace Wikimedia.Utilities.Services
             pos = Math.Max(trimmedText.IndexOf("==References=="), trimmedText.IndexOf("== References =="));
 
             if (pos == -1)
+                pos = Math.Max(trimmedText.IndexOf("== References=="), trimmedText.IndexOf("==References =="));
+
+            if (pos == -1)
                 throw new InvalidWikipediaPageException($"Not found:  ==[]References[]== ");
 
             trimmedText = trimmedText.Substring(0, pos);
