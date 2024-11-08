@@ -2,7 +2,7 @@
 Utility library that contains generic functionality for my Wikipedia and Wikidata projects.
 
 ### Personal library
-As per 2023 I created four repositories that assists me in my endeavour to improve the quality of the [Deaths per month articles](https://en.wikipedia.org/wiki/Lists_of_deaths_by_year) on Wikipedia.
+As per 2024 I created four repositories that assists me in my endeavour to improve the quality of the [Deaths per month articles](https://en.wikipedia.org/wiki/Lists_of_deaths_by_year) on Wikipedia.
 These repo's (web applications and console utilities) make use of this library to access common functionality. An example is fetching the raw [wikitext](https://en.wikipedia.org/wiki/Help:Wikitext) of a Wikipedia article.
 
 The utility offers three types of services:
