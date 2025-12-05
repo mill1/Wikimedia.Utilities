@@ -6,7 +6,7 @@ namespace Wikimedia.Utilities.Interfaces
 {
     public interface IWikiTextService
     {
-        string GetWikiTextDeathsPerMonth(DateTime deathDate, bool removeSublists, string listArticleName = null);
+        string GetWikiTextDeathsPerMonth(DateTime deathDate, bool removeSublists, string listArticle = null, bool isDPY = false, bool isY = false, bool countRefs = false);
         string GetDaySectionOfMonthList(string wikiText, int day);
         IEnumerable<string> GetDeceasedTextAsList(string daySection);
         DateTime ResolveDateOfBirth(WikipediaListItemDto entry, string wikiText);
@@ -16,7 +16,7 @@ namespace Wikimedia.Utilities.Interfaces
         string ResolveCauseOfDeath(WikipediaListItemDto entry);
         string ResolveKnownFor(string wikiText, string description);        
         string TrimWikiText(string wikiText, string month, int year);
-        string GetNameFromEntryText(string entryText, bool linkedName);
+        string GetNameFromEntryText(string entryText, bool linkedName, bool checkRedirection = true);
         string GetInformationFromEntryText(string entryText);
         string GetReferencesFromEntryText(string entryText);
         string SanitizeDescription(string description);
