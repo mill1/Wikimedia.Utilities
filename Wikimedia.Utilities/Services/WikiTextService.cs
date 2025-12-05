@@ -17,31 +17,31 @@ namespace Wikimedia.Utilities.Services
         private const int InitialPosEnd = 100000;
         private const string EntryDelimiter = "~!&#~[[";
 
-        public string GetWikiTextDeathsPerMonth(DateTime deathDate, bool removeSublists, string listArticleName = null)
+        public string GetWikiTextDeathsPerMonth(DateTime deathDate, bool removeSublists, string listArticle = null, bool isDPY = false, bool isY = false, bool countRefs = false)
         {
-            string text;
-            string month = deathDate.ToString("MMMM", new CultureInfo("en-US"));
-            string articleName = listArticleName == null ? $"Deaths in {month} {deathDate.Year}" : listArticleName;
-
-            text = new WikipediaWebClient().GetWikiTextArticle(articleName, out string redirectedArticle);
-
-            if (redirectedArticle != null)
-                // No deaths per month article yet. Redirected to Year page
-                return null;
-
-            text = TrimWikiText(text, month, deathDate.Year);
+            string text = ResolveWikiTextMonthSection(deathDate, listArticle, isDPY, isY, countRefs);
 
             if (removeSublists)
+            {
                 text = RemoveSubLists(text);
+            }
 
             // Correct markup temporarily
             text = text.Replace("* [[", "*[[");
             // Flatten the sublists (if any)
             text = text.Replace("**[[", "*[[");
-            // See GetDeceasedTextAsList(); solves hassle with "M*A*S*H, "NOC*NSF, * in references etc.
-            text = text.Replace("*[[", EntryDelimiter); 
 
-            //  'alphabetisation' tags: aanpassen in wiki:
+            // Other situations that could influence entry/ref counts
+            text = text.Replace("*Sir [[", "*[[");
+            text = text.Replace("*Dame [[", "*[[");
+            text = text.Replace("*Father [[", "*[[");
+            text = text.Replace("*Prince [[", "*[[");
+            text = text.Replace("*Bishop [[", "*[[");
+
+            // See GetDeceasedTextAsList(); solves hassle with "M*A*S*H, "NOC*NSF, * in references etc.
+            text = text.Replace("*[[", EntryDelimiter);
+
+            //  'alphabetisation' tags: edit in wiki?
             // FOUT: *<!-- M -->[[Mei Baojiu]], 82
             // GOED: <!-- M -->*[[Mei Baojiu]], 82
             // see https://en.wikipedia.org/w/index.php?title=Deaths_in_April_2016&oldid=prev&diff=1048507267
@@ -49,26 +49,179 @@ namespace Wikimedia.Utilities.Services
             return text;
         }
 
+        private string ResolveWikiTextMonthSection(DateTime deathDate, string listArticle, bool isDPY, bool isY, bool countRefs)
+        {
+            if (isY)
+            {
+                // If it is a Y (=Year page like '1994') we need to resolve the text of the month
+                return GetWikiTextDeathsPerMonthFromYearArticle(deathDate, listArticle, countRefs);
+            }
+            else if (isDPY)
+            {
+                // If it is a DPY we also need to resolve the text of the month
+                return GetWikiTextDeathsPerMonthFromDPY(deathDate, listArticle);
+            }
+            else
+            {
+                string month = deathDate.ToString("MMMM", new CultureInfo("en-US"));
+                string articleName = listArticle == null ? $"Deaths in {month} {deathDate.Year}" : listArticle;
+
+                var text = new WikipediaWebClient().GetWikiTextArticle(articleName, out string redirectedArticle);
+
+                if (redirectedArticle != null)
+                    // No deaths per month article yet. Redirected to Year page
+                    return null;
+
+                return TrimWikiText(text, month, deathDate.Year);
+            }
+        }
+
+        private string GetWikiTextDeathsPerMonthFromYearArticle(DateTime deathDate, string listArticle, bool countRefs)
+        {
+            string wikiText = GetWikiTextDeathsSectionFromYearArticle(listArticle);
+
+            wikiText = GetWikiTextMonthSubsectionFromDeathsSectionYearArticle(wikiText, deathDate);
+
+            string wikiTextStub = $"=={deathDate.ToString("MMMM", new CultureInfo("en-US"))} {deathDate.Year}== ";
+
+            for (int day = 1; day <= DateTime.DaysInMonth(deathDate.Year, deathDate.Month); day++)
+            {
+                wikiTextStub += $"==={day}=== ";
+
+                int count = GetCountPerDay(day, deathDate, wikiText, countRefs);
+
+                for (int i = 1; i <= count; i++)
+                    wikiTextStub += $"*[[Person {i}]], {60 + i}, Reason for notability, CoD.<ref>some reference</ref> ";
+            }
+
+            return wikiTextStub;
+        }
+
+        private string GetWikiTextDeathsSectionFromYearArticle(string listArticle)
+        {
+            string wikiText = new WikipediaWebClient().GetWikiTextArticle(listArticle, out _);
+
+            int pos = ResolvePositionInWikiTextDPY(wikiText, "Deaths");
+            string text = wikiText.Substring(pos);
+            pos = ResolvePositionInWikiTextDPY(text, "Nobel Prizes");
+            text = text.Substring(0, pos);
+
+            return text.Replace("\n", "");
+        }
+
+        private string GetWikiTextMonthSubsectionFromDeathsSectionYearArticle(string wikiText, DateTime deathDate)
+        {
+            var month = deathDate.ToString("MMMM", new CultureInfo("en-US"));
+
+            int pos = Math.Max(wikiText.IndexOf($"==={month}==="), wikiText.IndexOf($"=== {month} ==="));
+
+            string text = wikiText.Substring(pos);
+
+            if (deathDate.Month == 12)
+                return text;
+
+            var nextMonth = deathDate.AddMonths(1).ToString("MMMM", new CultureInfo("en-US"));
+            pos = Math.Max(text.IndexOf($"==={nextMonth}==="), text.IndexOf($"=== {nextMonth} ==="));
+
+            text = text.Substring(0, pos);
+
+            return text.Replace("\n", "");
+        }
+
+        private string GetWikiTextDeathsPerMonthFromDPY(DateTime deathDate, string listArticle)
+        {
+            string subSection = $"{deathDate.ToString("MMMM", new CultureInfo("en-US"))} {deathDate.Year}";
+            string nextSubSection = deathDate.Month == 12 ? "References" : $"{deathDate.AddMonths(1).ToString("MMMM", new CultureInfo("en-US"))} {deathDate.Year}";
+
+            string wikiText = new WikipediaWebClient().GetWikiTextArticle(listArticle, out _);
+
+            int pos = ResolvePositionInWikiTextDPY(wikiText, subSection);
+            string text = wikiText.Substring(pos);
+
+            pos = ResolvePositionInWikiTextDPY(text, nextSubSection);
+            text = text.Substring(0, pos);
+
+            return text.Replace("\n", "");
+        }
+
+        private int ResolvePositionInWikiTextDPY(string wikiText, string subSection)
+        {
+            int pos = Math.Max(wikiText.IndexOf($"=={subSection}=="), wikiText.IndexOf($"== {subSection} =="));
+            if (pos == -1)
+            {
+                throw new InvalidWikipediaPageException($"Not found:  ==[]{subSection}[]== ");
+            }
+
+            return pos;
+        }
+
         public string GetDaySectionOfMonthList(string wikiText, int day)
         {
-            string daySection = wikiText;
-            int pos;
+            string text = wikiText;
+            int pos = Math.Max(text.IndexOf($"==={day}==="), text.IndexOf($"=== {day} ==="));
+            if (pos == -1)
+            {
+                // Day subsection does not exist
+                //throw new InvalidWikipediaPageException($"Invalid day section header found. Day: {day}, Text: '{wikiText.Substring(0, 16)}...'");
+                return $"==={day}===";
+            }
 
-            //Trim left
-            pos = Math.Max(daySection.IndexOf($"==={day}==="), daySection.IndexOf($"=== {day} ==="));
+            text = text.Substring(pos);
+            pos = Math.Max(text.IndexOf($"==={day + 1}==="), text.IndexOf($"=== {day + 1} ==="));
+            if (pos == -1)
+            {
+                // Check if next day subsection does not exist.
+                // Ugly dependency; month text was trimmed before calling this method. 
+                // Ergo: if "===" cannot be found we're dealing with the last day of the month
+                // if found then the expected following day subsection was not found:
+                // We'll need to get the day section until the following one.
+
+                int startIndex = $"=== {day + 1} ===".Length;
+                var textRemaining = text[Math.Min(startIndex, text.Length)..];
+
+                if (textRemaining.Contains("==="))
+                {
+                    int posNext = textRemaining.IndexOf("===");
+                    text = text.Substring(0, posNext + startIndex);
+                }
+                return text;
+            }
+            return text.Substring(0, pos);
+        }
+
+        private static int GetCountPerDay(int day, DateTime deathDate, string wikiText, bool countRefs)
+        {
+            var month = deathDate.ToString("MMMM", new CultureInfo("en-US"));
+
+            var date = $"{month} {day}";
+
+            int pos = Math.Max(wikiText.IndexOf($"[[{date}]]"), wikiText.IndexOf($"[[ {date} ]]"));
 
             if (pos == -1)
-                throw new InvalidWikipediaPageException($"Invalid day section header found. Day: {day}, Text: '{wikiText.Substring(0, 16)}...'");
+                return 0;
 
-            daySection = daySection.Substring(pos);
+            // Find the next date
+            string text = wikiText.Substring(pos + $"[[{date}]]".Length);
+            pos = Math.Max(text.IndexOf($"[[{month}"), text.IndexOf($"[[ {month}"));
 
-            // Trim right
-            pos = Math.Max(daySection.IndexOf($"==={day + 1}==="), daySection.IndexOf($"=== {day + 1} ==="));
+            if (pos != -1)
+                text = text.Substring(0, pos - 1);
 
-            if (pos == -1) // we reached the end
-                return daySection;
+            int count;
+
+            if (countRefs)
+            {
+                count = text.Split("<ref").Length - 1;
+            }
             else
-                return daySection.Substring(0, pos);
+            {
+                text = text.Replace("– [[", "–[[");
+                text = text.Replace("** [[", "**[[");
+
+                count = Math.Max(text.Split("–[[").Length - 1, text.Split("**[[").Length - 1);
+            }
+
+            return count;
         }
 
         public IEnumerable<string> GetDeceasedTextAsList(string daySection)
@@ -83,7 +236,7 @@ namespace Wikimedia.Utilities.Services
         private string RemoveSubLists(string text)
         {
             if (text.Contains("** [["))
-                throw new InvalidWikipediaPageException($"Invalid markup style found: '** [['. Fix the article");
+                text = text.Replace("** [[", "**[[");
 
             if (!text.Contains("**[["))
                 return text;
@@ -470,7 +623,7 @@ namespace Wikimedia.Utilities.Services
             return wikiText;
         }
 
-        public string GetNameFromEntryText(string entryText, bool linkedName)
+        public string GetNameFromEntryText(string entryText, bool linkedName, bool checkRedirection=true)
         {
             string namePart = entryText.Substring("[[".Length, entryText.IndexOf("]]") - "]]".Length);
             int pos = namePart.IndexOf('|');
@@ -486,7 +639,8 @@ namespace Wikimedia.Utilities.Services
                     name = namePart.Substring(pos + "|".Length);
             }
 
-            name = CheckRedirection(linkedName, name);
+            if (checkRedirection)
+                name = CheckRedirection(linkedName, name);
 
             return name;
         }
